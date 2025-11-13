@@ -1,0 +1,56 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+# === Android Studio ===
+.gradle/
+.idea/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+*.iml
+
+# === Build outputs ===
+app/build/
+build/
+
+# === NDK / C++ ===
+*.o
+*.so
+*.a
+
+external/opencv-*/sdk/native/libs/*/*.so
+
+# === OS Files ===
+.DS_Store
+Thumbs.db
+
+# === Log files ===
+*.log
+
+# === Node / TypeScript (for web viewer) ===
+web/node_modules/
+web/dist/
+web/build/
+
+# === Misc ===
+*.class
+*.apk
+*.ap_
+*.dex
+
+# Backup / temp
+*.tmp
+*.temp

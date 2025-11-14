@@ -12,11 +12,8 @@ import android.graphics.YuvImage
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.opengl.GLSurfaceView
-import android.widget.ArrayAdapter
 import android.widget.ImageButton
 import android.widget.ImageView
-import android.widget.Spinner
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
@@ -47,9 +44,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var edgeDetectionSwitch: Switch
     private lateinit var cameraPreview: PreviewView
     private lateinit var processedImageView: ImageView
-    private lateinit var glSurfaceView: GLSurfaceView
-    private lateinit var effectSpinner: Spinner
-    private lateinit var glRenderer: GLRenderer
     private lateinit var cameraExecutor: ExecutorService
     
     private var isCameraStarted = false
@@ -67,36 +61,6 @@ class MainActivity : AppCompatActivity() {
         edgeDetectionSwitch = findViewById(R.id.edgeDetectionSwitch)
         cameraPreview = findViewById(R.id.cameraPreview)
         processedImageView = findViewById(R.id.processedImageView)
-        glSurfaceView = findViewById(R.id.glSurfaceView)
-        effectSpinner = findViewById(R.id.effectSpinner)
-        
-        // Initialize OpenGL renderer
-        glRenderer = GLRenderer()
-        glSurfaceView.setEGLContextClientVersion(2)
-        glSurfaceView.setRenderer(glRenderer)
-        glSurfaceView.renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
-        
-        // Setup effect spinner
-        val effects = arrayOf("Normal", "Grayscale", "Invert", "Sepia", "Blur")
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, effects)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        effectSpinner.adapter = adapter
-        
-        effectSpinner.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
-                val effect = when (position) {
-                    0 -> GLRenderer.EffectType.NORMAL
-                    1 -> GLRenderer.EffectType.GRAYSCALE
-                    2 -> GLRenderer.EffectType.INVERT
-                    3 -> GLRenderer.EffectType.SEPIA
-                    4 -> GLRenderer.EffectType.BLUR
-                    else -> GLRenderer.EffectType.NORMAL
-                }
-                glRenderer.setEffect(effect)
-                glSurfaceView.requestRender()
-            }
-            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
-        }
         
         // Initialize camera executor
         cameraExecutor = Executors.newSingleThreadExecutor()
@@ -117,19 +81,7 @@ class MainActivity : AppCompatActivity() {
         // Edge detection switch
         edgeDetectionSwitch.setOnCheckedChangeListener { _, isChecked ->
             isEdgeDetectionEnabled = isChecked
-            // When switching modes, hide both views initially to avoid overlap
-            if (isChecked) {
-                // Edge detection mode - will show processedImageView when frame is processed
-                glSurfaceView.visibility = View.GONE
-                processedImageView.visibility = View.GONE
-                Log.d(TAG, "Edge detection enabled - waiting for processed frame")
-            } else {
-                // Effects mode - will show glSurfaceView when frame is processed  
-                processedImageView.visibility = View.GONE
-                glSurfaceView.visibility = View.GONE
-                Log.d(TAG, "OpenGL effects enabled - waiting for camera frame")
-            }
-            Log.d(TAG, "Mode switched to ${if (isChecked) "edge detection" else "OpenGL effects"}")
+            Log.d(TAG, "Edge detection ${if (isChecked) "enabled" else "disabled"}")
         }
 
         // Initial status
@@ -345,29 +297,18 @@ class MainActivity : AppCompatActivity() {
                 }
                 val rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true)
                 
-                // Update display with bitmap - show edge detection OR OpenGL effects
+                // Update display with bitmap
                 runOnUiThread {
                     if (isEdgeDetectionEnabled) {
-                        // Show edge detection result in regular ImageView
                         processedImageView.setImageBitmap(rotatedBitmap)
                         processedImageView.visibility = View.VISIBLE
                         processedImageView.scaleType = ImageView.ScaleType.FIT_CENTER
                         processedImageView.adjustViewBounds = true
-                        
-                        glSurfaceView.visibility = View.GONE
                         Log.d(TAG, "Displaying edge detection result")
                     } else {
-                        // Show original camera feed with OpenGL effects applied
-                        // For effects, we want the original image, so get it from the raw camera data
-                        val originalBitmap = createOriginalBitmap(cameraData, width, height)
-                        if (originalBitmap != null) {
-                            glRenderer.updateTexture(originalBitmap)
-                            glSurfaceView.requestRender()
-                            glSurfaceView.visibility = View.VISIBLE
-                            processedImageView.visibility = View.GONE
-                            Log.d(TAG, "Displaying OpenGL effects")
-                            originalBitmap.recycle()
-                        }
+                        // No edge detection - hide the processed image view
+                        processedImageView.visibility = View.GONE
+                        Log.d(TAG, "Edge detection disabled - hiding processed image")
                     }
                 }
                 

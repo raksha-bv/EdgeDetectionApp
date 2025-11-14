@@ -132,10 +132,13 @@ class GLRenderer : GLSurfaceView.Renderer {
     override fun onDrawFrame(gl: GL10?) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
         
-        if (needsTextureUpdate && bitmap != null) {
+        if (needsTextureUpdate && bitmap != null && !bitmap!!.isRecycled) {
             Log.d(TAG, "Uploading texture to GPU")
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId)
             GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0)
+            needsTextureUpdate = false
+        } else if (needsTextureUpdate && bitmap != null && bitmap!!.isRecycled) {
+            Log.e(TAG, "Cannot upload texture - bitmap is recycled")
             needsTextureUpdate = false
         }
         
@@ -168,6 +171,11 @@ class GLRenderer : GLSurfaceView.Renderer {
         }
     }
 
+    fun cleanup() {
+        bitmap?.recycle()
+        bitmap = null
+    }
+
     private fun createShaderProgram() {
         val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode)
         val fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, getFragmentShaderCode(currentEffect))
@@ -195,7 +203,13 @@ class GLRenderer : GLSurfaceView.Renderer {
 
     fun updateTexture(bitmap: Bitmap) {
         Log.d(TAG, "Updating texture with bitmap: ${bitmap.width}x${bitmap.height}")
-        this.bitmap = bitmap
-        needsTextureUpdate = true
+        // Create a copy to avoid recycling issues on different threads
+        if (!bitmap.isRecycled) {
+            this.bitmap?.recycle() // Clean up previous bitmap
+            this.bitmap = bitmap.copy(bitmap.config, false)
+            needsTextureUpdate = true
+        } else {
+            Log.w(TAG, "Cannot update texture - bitmap is already recycled")
+        }
     }
 }

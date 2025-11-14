@@ -8,23 +8,24 @@ A comprehensive edge detection application featuring both Android mobile app and
 
 Try the edge detection features directly in your browser without any installation required!
 
+### Demo Video
+
+[![Android App Demo](https://img.youtube.com/vi/e7IrhoX7bJE/0.jpg)](https://www.youtube.com/shorts/e7IrhoX7bJE)
+
+_Live demonstration of Android app edge detection capabilities - Click to watch on YouTube_
+
 ## Screenshots
 
 ### Android Application
 
 ![Android App - Edge Detection](media/screenshots/android/working_screenshot.webp)
+
 _Real-time edge detection processing on Android device_
 
 ### Web Interface
 
 ![Web Interface - Edge Detection](media/screenshots/web/working_web.png)
 _Browser-based edge detection with interactive controls_
-
-### Demo Video
-
-[![Android App Demo](https://img.youtube.com/vi/e7IrhoX7bJE/0.jpg)](https://www.youtube.com/shorts/e7IrhoX7bJE)
-
-_Live demonstration of Android app edge detection capabilities - Click to watch on YouTube_
 
 ## Features
 
@@ -64,7 +65,7 @@ _Live demonstration of Android app edge detection capabilities - Click to watch 
 - **Framework**: Next.js 14 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
-- **Image Processing**: Custom JavaScript algorithms
+- **Image Processing**: OpenCV.js
 - **Build Tool**: npm/yarn
 
 ### Native Backend
@@ -344,6 +345,14 @@ npm run lint
 npx tsc --noEmit
 ```
 
+### Device Testing
+
+The Android application has been tested on:
+
+- **Physical Device**: Real Android device with camera functionality
+- **Android Emulator**: Android Studio emulator with camera simulation
+- **Multiple API Levels**: Tested on Android API 24-34
+
 ## Contributing
 
 1. Fork the repository
@@ -360,10 +369,6 @@ npx tsc --noEmit
 - Write unit tests for new features
 - Update documentation for API changes
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## Acknowledgments
 
 - **OpenCV**: Computer vision library for image processing
@@ -378,7 +383,3 @@ For questions, issues, or contributions:
 - Create an issue on GitHub
 - Check existing documentation
 - Review the code comments for implementation details
-
----
-
-**Made with passion for real-time image processing and edge detection**

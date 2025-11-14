@@ -2,160 +2,341 @@ package com.example.edgedetectionapp
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.graphics.ImageFormat
+import android.graphics.Matrix
+import android.graphics.Rect
+import android.graphics.YuvImage
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.opengl.GLSurfaceView
+import android.widget.ArrayAdapter
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.Spinner
+import android.widget.Switch
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.example.edgedetectionapp.databinding.ActivityMainBinding
-import org.opencv.android.OpenCVLoader
+import java.io.ByteArrayOutputStream
+import java.nio.ByteBuffer
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityMainBinding
-    private lateinit var cameraExecutor: ExecutorService
-    private lateinit var glSurfaceView: CameraGLSurfaceView
-    private var isEdgeDetectionEnabled = false
-    
+
     companion object {
-        private const val TAG = "MainActivity"
+        private const val TAG = "EdgeDetectionApp"
         private const val REQUEST_CODE_PERMISSIONS = 10
         private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
     }
+    
+    private lateinit var statusText: TextView
+    private lateinit var startCameraButton: ImageButton
+    private lateinit var edgeDetectionSwitch: Switch
+    private lateinit var cameraPreview: PreviewView
+    private lateinit var processedImageView: ImageView
+    private lateinit var glSurfaceView: GLSurfaceView
+    private lateinit var effectSpinner: Spinner
+    private lateinit var glRenderer: GLRenderer
+    private lateinit var cameraExecutor: ExecutorService
+    
+    private var isCameraStarted = false
+    private var isEdgeDetectionEnabled = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setContentView(R.layout.activity_main_camera)
 
-        // Initialize OpenCV (optional for emulator)
-        if (!OpenCVLoader.initDebug()) {
-            Log.e(TAG, "OpenCV initialization failed - continuing without OpenCV")
-            Toast.makeText(this, "Running without OpenCV", Toast.LENGTH_SHORT).show()
-        } else {
-            Log.d(TAG, "OpenCV initialized successfully")
-        }
+        Log.d(TAG, "MainActivity created")
 
-        // Initialize Native Library (optional)
-        try {
-            val testString = NativeLib.stringFromJNI()
-            Log.d(TAG, testString)
-            NativeLib.initProcessor()
-        } catch (e: Exception) {
-            Log.e(TAG, "Native library error: ${e.message} - continuing without native features")
-            // Don't show error toast, just log
-        }
-
-        // Setup GLSurfaceView
-        glSurfaceView = binding.glSurfaceView
+        // Initialize UI components
+        statusText = findViewById(R.id.statusText)
+        startCameraButton = findViewById<ImageButton>(R.id.startCameraButton)
+        edgeDetectionSwitch = findViewById(R.id.edgeDetectionSwitch)
+        cameraPreview = findViewById(R.id.cameraPreview)
+        processedImageView = findViewById(R.id.processedImageView)
+        glSurfaceView = findViewById(R.id.glSurfaceView)
+        effectSpinner = findViewById(R.id.effectSpinner)
         
-        // Setup UI
-        setupUI()
-
-        // Request camera permissions (optional for emulator)
-        if (allPermissionsGranted()) {
-            startCamera()
-        } else {
-            ActivityCompat.requestPermissions(
-                this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS
-            )
-            // Continue even without camera permissions for emulator testing
-            Toast.makeText(this, "Camera permission needed for full functionality", Toast.LENGTH_LONG).show()
-        }
-
-        cameraExecutor = Executors.newSingleThreadExecutor()
-    }
-
-    private fun setupUI() {
-        binding.toggleButton.setOnClickListener {
-            isEdgeDetectionEnabled = !isEdgeDetectionEnabled
-            binding.toggleButton.text = if (isEdgeDetectionEnabled) {
-                "Show Raw Feed"
-            } else {
-                "Show Edge Detection"
+        // Initialize OpenGL renderer
+        glRenderer = GLRenderer()
+        glSurfaceView.setEGLContextClientVersion(2)
+        glSurfaceView.setRenderer(glRenderer)
+        glSurfaceView.renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
+        
+        // Setup effect spinner
+        val effects = arrayOf("Normal", "Grayscale", "Invert", "Sepia", "Blur")
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, effects)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        effectSpinner.adapter = adapter
+        
+        effectSpinner.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
+                val effect = when (position) {
+                    0 -> GLRenderer.EffectType.NORMAL
+                    1 -> GLRenderer.EffectType.GRAYSCALE
+                    2 -> GLRenderer.EffectType.INVERT
+                    3 -> GLRenderer.EffectType.SEPIA
+                    4 -> GLRenderer.EffectType.BLUR
+                    else -> GLRenderer.EffectType.NORMAL
+                }
+                glRenderer.setEffect(effect)
+                glSurfaceView.requestRender()
             }
-            glSurfaceView.setEdgeDetectionEnabled(isEdgeDetectionEnabled)
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
         }
         
-        binding.fpsText.text = "FPS: --"
-    }
+        // Initialize camera executor
+        cameraExecutor = Executors.newSingleThreadExecutor()
 
+        // Camera button click
+        startCameraButton.setOnClickListener {
+            if (isCameraStarted) {
+                stopCamera()
+            } else {
+                if (allPermissionsGranted()) {
+                    startCamera()
+                } else {
+                    ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
+                }
+            }
+        }
+        
+        // Edge detection switch
+        edgeDetectionSwitch.setOnCheckedChangeListener { _, isChecked ->
+            isEdgeDetectionEnabled = isChecked
+            if (!isChecked) {
+                // Hide edge detection output when off
+                processedImageView.visibility = View.GONE
+                glSurfaceView.visibility = View.GONE
+            }
+            Log.d(TAG, "Edge detection ${if (isChecked) "enabled" else "disabled"}")
+        }
+
+        // Initial status
+        updateStatus()
+    }
+    
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-
+        
         cameraProviderFuture.addListener({
-            try {
-                val cameraProvider = cameraProviderFuture.get()
-
-                val preview = Preview.Builder()
-                    .build()
-                    .also {
-                        it.setSurfaceProvider(binding.previewView.surfaceProvider)
-                    }
-
-                val imageAnalyzer = ImageAnalysis.Builder()
-                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                    .build()
-                    .also {
-                        it.setAnalyzer(cameraExecutor, CameraFrameAnalyzer(glSurfaceView) { fps ->
-                            runOnUiThread {
-                                binding.fpsText.text = String.format("FPS: %.1f", fps)
-                            }
-                        })
-                    }
-
-                val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-                try {
-                    cameraProvider.unbindAll()
-                    cameraProvider.bindToLifecycle(
-                        this, cameraSelector, preview, imageAnalyzer
-                    )
-                    Log.d(TAG, "Camera started successfully")
-                } catch (exc: Exception) {
-                    Log.e(TAG, "Camera binding failed - app will continue without camera", exc)
-                    runOnUiThread {
-                        Toast.makeText(this@MainActivity, "Camera unavailable (emulator?)", Toast.LENGTH_LONG).show()
-                    }
-                }
-            } catch (exc: Exception) {
-                Log.e(TAG, "Camera initialization failed", exc)
-                runOnUiThread {
-                    Toast.makeText(this@MainActivity, "Camera not available", Toast.LENGTH_LONG).show()
-                }
+            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+            
+            val preview = Preview.Builder().build().also {
+                it.setSurfaceProvider(cameraPreview.surfaceProvider)
             }
-
+            
+            // Add image analysis for edge detection
+            val imageAnalyzer = ImageAnalysis.Builder()
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build()
+                .also { 
+                    it.setAnalyzer(cameraExecutor, EdgeDetectionAnalyzer())
+                }
+            
+            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+            
+            try {
+                cameraProvider.unbindAll()
+                cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalyzer)
+                
+                isCameraStarted = true
+                startCameraButton.setImageResource(android.R.drawable.ic_media_pause)
+                
+                statusText.text = "Camera active - Ready for edge detection!"
+                statusText.visibility = View.VISIBLE
+                Log.d(TAG, "Camera started successfully with image analysis")
+                
+            } catch (exc: Exception) {
+                Log.e(TAG, "Camera start failed", exc)
+                statusText.text = "Camera start failed: ${exc.message}"
+            }
+            
         }, ContextCompat.getMainExecutor(this))
     }
-
+    
+    private fun stopCamera() {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        cameraProviderFuture.addListener({
+            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+            cameraProvider.unbindAll()
+            
+            isCameraStarted = false
+            startCameraButton.setImageResource(R.drawable.ic_camera)
+            
+            statusText.text = "Camera stopped"
+            statusText.visibility = View.GONE
+            Log.d(TAG, "Camera stopped")
+            
+        }, ContextCompat.getMainExecutor(this))
+    }
+    
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
         ContextCompat.checkSelfPermission(baseContext, it) == PackageManager.PERMISSION_GRANTED
     }
-
+    
     override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<String>, grantResults: IntArray
-    ) {
+        requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (allPermissionsGranted()) {
                 startCamera()
             } else {
-                Toast.makeText(this, "Camera permission required", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Permissions not granted by the user.", Toast.LENGTH_SHORT).show()
                 finish()
             }
         }
     }
-
+    
+    private fun updateStatus() {
+        if (NativeLib.isLibraryLoaded()) {
+            try {
+                val result = NativeLib.stringFromJNI()
+                val processorInit = NativeLib.initializeProcessor()
+                val processorStatus = if (processorInit) "✅ Processor Ready" else "⚠️ Processor Pending"
+                statusText.text = "✅ $result\n$processorStatus\nTap buttons to test"
+            } catch (e: Exception) {
+                statusText.text = "⚠️ Native lib error: ${e.message}"
+            }
+        } else {
+            statusText.text = "❌ Native library not loaded"
+        }
+    }
+    
     override fun onDestroy() {
         super.onDestroy()
         cameraExecutor.shutdown()
-        NativeLib.releaseProcessor()
-        NativeLib.releaseRenderer()
+    }
+    
+    private inner class EdgeDetectionAnalyzer : ImageAnalysis.Analyzer {
+        private var frameCount = 0
+        private var lastProcessTime = System.currentTimeMillis()
+        
+        override fun analyze(image: ImageProxy) {
+            frameCount++
+            val currentTime = System.currentTimeMillis()
+            
+            // Process every 10th frame to avoid overloading (3fps on 30fps camera)
+            if (frameCount % 10 == 0) {
+                try {
+                    if (isEdgeDetectionEnabled && NativeLib.isProcessorReady()) {
+                        processImageForEdgeDetection(image)
+                        
+                        // Update status every 2 seconds
+                        if (currentTime - lastProcessTime > 2000) {
+                            runOnUiThread {
+                                statusText.text = "Processing - Frame: $frameCount"
+                            }
+                            lastProcessTime = currentTime
+                        }
+                    } else if (currentTime - lastProcessTime > 2000) {
+                        runOnUiThread {
+                            val status = if (isEdgeDetectionEnabled) {
+                                "Edge detection enabled but processor not ready"
+                            } else {
+                                "Camera active - Edge detection OFF"
+                            }
+                            statusText.text = "$status - Frame: $frameCount"
+                        }
+                        lastProcessTime = currentTime
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Frame processing error: ${e.message}")
+                }
+            }
+            
+            image.close()
+        }
+        
+        private fun processImageForEdgeDetection(image: ImageProxy) {
+            try {
+                // Convert ImageProxy to byte array
+                val buffer = image.planes[0].buffer
+                val bytes = ByteArray(buffer.remaining())
+                buffer.get(bytes)
+                
+                // Log frame processing
+                Log.d(TAG, "Processing frame: ${image.width}x${image.height}, bytes: ${bytes.size}")
+                
+                // Call native processor
+                val processedData = NativeLib.processFrameData(bytes, image.width, image.height, isEdgeDetectionEnabled)
+                
+                if (processedData != null) {
+                    Log.d(TAG, "Frame processed successfully, output size: ${processedData.size}")
+                    if (isEdgeDetectionEnabled) {
+                        // Convert processed data to bitmap and display
+                        convertAndDisplayBitmap(processedData, image.width, image.height)
+                        Log.d(TAG, "Edge detection applied and displayed")
+                    }
+                } else {
+                    Log.w(TAG, "Frame processing returned null")
+                }
+                
+            } catch (e: Exception) {
+                Log.e(TAG, "Error processing image: ${e.message}")
+            }
+        }
+        
+        private fun convertAndDisplayBitmap(processedData: ByteArray, width: Int, height: Int) {
+            try {
+                // Create bitmap from processed data
+                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                
+                // Convert grayscale data to ARGB format
+                val pixels = IntArray(width * height)
+                for (i in processedData.indices.take(width * height)) {
+                    val gray = processedData[i].toInt() and 0xFF
+                    pixels[i] = Color.argb(255, gray, gray, gray)
+                }
+                
+                bitmap.setPixels(pixels, 0, width, 0, 0, width, height)
+                
+                // Fix rotation - rotate 90 degrees clockwise to match camera orientation
+                val matrix = Matrix().apply {
+                    postRotate(90f)
+                }
+                val rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true)
+                
+                // Update display with bitmap - use OpenGL for effects
+                runOnUiThread {
+                    if (isEdgeDetectionEnabled) {
+                        // Show edge detection in regular ImageView
+                        processedImageView.setImageBitmap(rotatedBitmap)
+                        processedImageView.visibility = View.VISIBLE
+                        processedImageView.scaleType = ImageView.ScaleType.FIT_CENTER
+                        processedImageView.adjustViewBounds = true
+                        
+                        glSurfaceView.visibility = View.GONE
+                    } else {
+                        // Show original image with OpenGL effects
+                        glRenderer.updateTexture(rotatedBitmap)
+                        glSurfaceView.requestRender()
+                        glSurfaceView.visibility = View.VISIBLE
+                        processedImageView.visibility = View.GONE
+                    }
+                }
+                
+                // Clean up original bitmap
+                if (bitmap != rotatedBitmap) {
+                    bitmap.recycle()
+                }
+                
+            } catch (e: Exception) {
+                Log.e(TAG, "Error creating bitmap: ${e.message}")
+            }
+        }
     }
 }

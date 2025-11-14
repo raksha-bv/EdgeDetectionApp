@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.EdgeDetectionApp" parent="android:Theme.Material.NoActionBar" />
+    <style name="Theme.EdgeDetectionApp" parent="Theme.AppCompat.NoActionBar" />
     
     <style name="Theme.EdgeDetectionViewer" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowFullscreen">false</item>

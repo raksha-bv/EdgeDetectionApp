@@ -1,20 +1,20 @@
 interface ResultsDisplayProps {
-  processedImage: string
-  processingTime: number | null
+  processedImage: string;
+  processingTime: number | null;
 }
 
-export default function ResultsDisplay({ 
-  processedImage, 
-  processingTime 
+export default function ResultsDisplay({
+  processedImage,
+  processingTime,
 }: ResultsDisplayProps) {
   const downloadImage = () => {
     if (processedImage) {
-      const link = document.createElement('a')
-      link.download = 'edge-detection-result.png'
-      link.href = processedImage
-      link.click()
+      const link = document.createElement("a");
+      link.download = "edge-detection-result.png";
+      link.href = processedImage;
+      link.click();
     }
-  }
+  };
 
   return (
     <div className="mt-6">
@@ -28,20 +28,25 @@ export default function ResultsDisplay({
           </span>
         )}
       </div>
-      
+
       <div className="relative">
         <img
           src={processedImage}
           alt="Edge Detection Result"
           className="w-full max-h-96 object-contain rounded-lg border bg-white"
         />
-        
+
         <button
           onClick={downloadImage}
           className="absolute top-2 right-2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-2 rounded-lg transition-all duration-200"
           title="Download Result"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -57,7 +62,12 @@ export default function ResultsDisplay({
           onClick={downloadImage}
           className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
         >
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -69,5 +79,5 @@ export default function ResultsDisplay({
         </button>
       </div>
     </div>
-  )
+  );
 }

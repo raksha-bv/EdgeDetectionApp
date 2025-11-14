@@ -22,22 +22,26 @@ A modern web application built with Next.js and TypeScript for image edge detect
 ## Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - npm or yarn
 
 ### Installation
 
 1. **Navigate to web interface directory**:
+
    ```bash
    cd web-interface
    ```
 
 2. **Install dependencies**:
+
    ```bash
    npm install
    ```
 
 3. **Start development server**:
+
    ```bash
    npm run dev
    ```
@@ -74,9 +78,9 @@ web-interface/
 ## Usage
 
 1. **Upload Image**: Drag and drop an image or click to browse
-2. **Adjust Parameters**: 
+2. **Adjust Parameters**:
    - Threshold 1: Lower edge detection threshold
-   - Threshold 2: Upper edge detection threshold  
+   - Threshold 2: Upper edge detection threshold
    - Kernel Size: Edge detection kernel size
 3. **Process**: Click "Apply Edge Detection"
 4. **Download**: Save the processed result
@@ -84,18 +88,21 @@ web-interface/
 ## Features in Detail
 
 ### Image Upload
+
 - Supports JPG, PNG, GIF formats
 - Drag & drop interface
 - File size validation
 - Preview functionality
 
 ### Edge Detection Algorithm
+
 - Custom Sobel edge detection implementation
 - Adjustable threshold parameters
 - Real-time processing
 - Canvas-based image manipulation
 
 ### Results Display
+
 - Side-by-side comparison
 - Processing time display
 - Download functionality
@@ -115,7 +122,7 @@ web-interface/
 ### Available Scripts
 
 - `npm run dev` - Start development server
-- `npm run build` - Build for production  
+- `npm run build` - Build for production
 - `npm start` - Start production server
 - `npm run lint` - Run ESLint
 

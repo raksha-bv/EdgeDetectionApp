@@ -28,6 +28,7 @@ android {
             java.srcDirs("src")
             res.srcDirs("res")
             manifest.srcFile("AndroidManifest.xml")
+            jniLibs.srcDirs("src/main/jniLibs")
         }
     }
     

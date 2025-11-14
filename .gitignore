@@ -44,6 +44,10 @@ Thumbs.db
 web/node_modules/
 web/dist/
 web/build/
+web-interface/node_modules/
+web-interface/.next/
+web-interface/dist/
+web-interface/build/
 
 # === Misc ===
 *.class

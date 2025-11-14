@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Light Theme Colors -->
+    <color name="primary_color">#5DADE2</color>
+    <color name="primary_light">#D6EAF8</color>
+    <color name="accent_color">#3498DB</color>
+    <color name="card_background">#FFFFFF</color>
+    <color name="button_primary">#4CAF50</color>
+    <color name="button_secondary">#666666</color>
+    
+    <!-- System Colors -->
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>

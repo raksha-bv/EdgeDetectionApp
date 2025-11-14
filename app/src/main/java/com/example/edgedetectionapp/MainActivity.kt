@@ -34,22 +34,22 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Initialize OpenCV
+        // Initialize OpenCV (optional for emulator)
         if (!OpenCVLoader.initDebug()) {
-            Log.e(TAG, "OpenCV initialization failed")
-            Toast.makeText(this, "OpenCV init failed", Toast.LENGTH_SHORT).show()
-            return
+            Log.e(TAG, "OpenCV initialization failed - continuing without OpenCV")
+            Toast.makeText(this, "Running without OpenCV", Toast.LENGTH_SHORT).show()
+        } else {
+            Log.d(TAG, "OpenCV initialized successfully")
         }
-        Log.d(TAG, "OpenCV initialized successfully")
 
-        // Initialize Native Library
+        // Initialize Native Library (optional)
         try {
             val testString = NativeLib.stringFromJNI()
             Log.d(TAG, testString)
             NativeLib.initProcessor()
         } catch (e: Exception) {
-            Log.e(TAG, "Native library error: ${e.message}")
-            Toast.makeText(this, "Native lib error", Toast.LENGTH_SHORT).show()
+            Log.e(TAG, "Native library error: ${e.message} - continuing without native features")
+            // Don't show error toast, just log
         }
 
         // Setup GLSurfaceView
@@ -58,13 +58,15 @@ class MainActivity : AppCompatActivity() {
         // Setup UI
         setupUI()
 
-        // Request camera permissions
+        // Request camera permissions (optional for emulator)
         if (allPermissionsGranted()) {
             startCamera()
         } else {
             ActivityCompat.requestPermissions(
                 this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS
             )
+            // Continue even without camera permissions for emulator testing
+            Toast.makeText(this, "Camera permission needed for full functionality", Toast.LENGTH_LONG).show()
         }
 
         cameraExecutor = Executors.newSingleThreadExecutor()
@@ -88,35 +90,45 @@ class MainActivity : AppCompatActivity() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
         cameraProviderFuture.addListener({
-            val cameraProvider = cameraProviderFuture.get()
-
-            val preview = Preview.Builder()
-                .build()
-                .also {
-                    it.setSurfaceProvider(binding.previewView.surfaceProvider)
-                }
-
-            val imageAnalyzer = ImageAnalysis.Builder()
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build()
-                .also {
-                    it.setAnalyzer(cameraExecutor, CameraFrameAnalyzer(glSurfaceView) { fps ->
-                        runOnUiThread {
-                            binding.fpsText.text = String.format("FPS: %.1f", fps)
-                        }
-                    })
-                }
-
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
             try {
-                cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview, imageAnalyzer
-                )
-                Log.d(TAG, "Camera started successfully")
+                val cameraProvider = cameraProviderFuture.get()
+
+                val preview = Preview.Builder()
+                    .build()
+                    .also {
+                        it.setSurfaceProvider(binding.previewView.surfaceProvider)
+                    }
+
+                val imageAnalyzer = ImageAnalysis.Builder()
+                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                    .build()
+                    .also {
+                        it.setAnalyzer(cameraExecutor, CameraFrameAnalyzer(glSurfaceView) { fps ->
+                            runOnUiThread {
+                                binding.fpsText.text = String.format("FPS: %.1f", fps)
+                            }
+                        })
+                    }
+
+                val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+                try {
+                    cameraProvider.unbindAll()
+                    cameraProvider.bindToLifecycle(
+                        this, cameraSelector, preview, imageAnalyzer
+                    )
+                    Log.d(TAG, "Camera started successfully")
+                } catch (exc: Exception) {
+                    Log.e(TAG, "Camera binding failed - app will continue without camera", exc)
+                    runOnUiThread {
+                        Toast.makeText(this@MainActivity, "Camera unavailable (emulator?)", Toast.LENGTH_LONG).show()
+                    }
+                }
             } catch (exc: Exception) {
-                Log.e(TAG, "Camera binding failed", exc)
+                Log.e(TAG, "Camera initialization failed", exc)
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, "Camera not available", Toast.LENGTH_LONG).show()
+                }
             }
 
         }, ContextCompat.getMainExecutor(this))

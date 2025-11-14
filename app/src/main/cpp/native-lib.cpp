@@ -288,3 +288,82 @@ Java_com_example_edgedetectionapp_NativeLib_releaseRenderer(
         renderer = nullptr;
     }
 }
+
+// Apply grayscale shader effect
+extern "C" JNIEXPORT jbyteArray JNICALL
+Java_com_example_edgedetectionapp_NativeLib_applyGrayscaleShader(
+        JNIEnv* env,
+        jobject /* this */,
+        jbyteArray imageData,
+        jint width,
+        jint height) {
+    
+    LOGD("Applying grayscale shader: %dx%d", width, height);
+    
+    // Get input data
+    jbyte* inputData = env->GetByteArrayElements(imageData, nullptr);
+    jsize dataSize = env->GetArrayLength(imageData);
+    
+    if (inputData == nullptr) {
+        LOGE("Failed to get input data for grayscale shader");
+        return nullptr;
+    }
+    
+    // Create output array
+    jbyteArray result = env->NewByteArray(width * height * 3); // RGB output
+    jbyte* outputData = env->GetByteArrayElements(result, nullptr);
+    
+    // Apply grayscale conversion (luminance formula: 0.299*R + 0.587*G + 0.114*B)
+    for (int i = 0; i < width * height && i < dataSize; i++) {
+        unsigned char gray = (unsigned char)(inputData[i] & 0xFF);
+        // Convert to RGB format for shader compatibility
+        outputData[i * 3] = gray;     // R
+        outputData[i * 3 + 1] = gray; // G
+        outputData[i * 3 + 2] = gray; // B
+    }
+    
+    env->ReleaseByteArrayElements(imageData, inputData, JNI_ABORT);
+    env->ReleaseByteArrayElements(result, outputData, 0);
+    
+    return result;
+}
+
+// Apply invert shader effect
+extern "C" JNIEXPORT jbyteArray JNICALL
+Java_com_example_edgedetectionapp_NativeLib_applyInvertShader(
+        JNIEnv* env,
+        jobject /* this */,
+        jbyteArray imageData,
+        jint width,
+        jint height) {
+    
+    LOGD("Applying invert shader: %dx%d", width, height);
+    
+    // Get input data
+    jbyte* inputData = env->GetByteArrayElements(imageData, nullptr);
+    jsize dataSize = env->GetArrayLength(imageData);
+    
+    if (inputData == nullptr) {
+        LOGE("Failed to get input data for invert shader");
+        return nullptr;
+    }
+    
+    // Create output array
+    jbyteArray result = env->NewByteArray(width * height * 3); // RGB output
+    jbyte* outputData = env->GetByteArrayElements(result, nullptr);
+    
+    // Apply color inversion
+    for (int i = 0; i < width * height && i < dataSize; i++) {
+        unsigned char original = (unsigned char)(inputData[i] & 0xFF);
+        unsigned char inverted = 255 - original;
+        // Convert to RGB format for shader compatibility
+        outputData[i * 3] = inverted;     // R
+        outputData[i * 3 + 1] = inverted; // G
+        outputData[i * 3 + 2] = inverted; // B
+    }
+    
+    env->ReleaseByteArrayElements(imageData, inputData, JNI_ABORT);
+    env->ReleaseByteArrayElements(result, outputData, 0);
+    
+    return result;
+}

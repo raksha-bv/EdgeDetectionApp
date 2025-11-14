@@ -117,12 +117,19 @@ class MainActivity : AppCompatActivity() {
         // Edge detection switch
         edgeDetectionSwitch.setOnCheckedChangeListener { _, isChecked ->
             isEdgeDetectionEnabled = isChecked
-            if (!isChecked) {
-                // Hide edge detection output when off
+            // When switching modes, hide both views initially to avoid overlap
+            if (isChecked) {
+                // Edge detection mode - will show processedImageView when frame is processed
+                glSurfaceView.visibility = View.GONE
+                processedImageView.visibility = View.GONE
+                Log.d(TAG, "Edge detection enabled - waiting for processed frame")
+            } else {
+                // Effects mode - will show glSurfaceView when frame is processed  
                 processedImageView.visibility = View.GONE
                 glSurfaceView.visibility = View.GONE
+                Log.d(TAG, "OpenGL effects enabled - waiting for camera frame")
             }
-            Log.d(TAG, "Edge detection ${if (isChecked) "enabled" else "disabled"}")
+            Log.d(TAG, "Mode switched to ${if (isChecked) "edge detection" else "OpenGL effects"}")
         }
 
         // Initial status
@@ -232,24 +239,25 @@ class MainActivity : AppCompatActivity() {
             // Process every 10th frame to avoid overloading (3fps on 30fps camera)
             if (frameCount % 10 == 0) {
                 try {
-                    if (isEdgeDetectionEnabled && NativeLib.isProcessorReady()) {
-                        processImageForEdgeDetection(image)
+                    // Always process frames for display (for OpenGL effects or edge detection)
+                    if (NativeLib.isProcessorReady()) {
+                        processImageForEffects(image)
                         
                         // Update status every 2 seconds
                         if (currentTime - lastProcessTime > 2000) {
                             runOnUiThread {
-                                statusText.text = "Processing - Frame: $frameCount"
+                                val status = if (isEdgeDetectionEnabled) {
+                                    "Processing with edge detection"
+                                } else {
+                                    "Processing with OpenGL effects"
+                                }
+                                statusText.text = "$status - Frame: $frameCount"
                             }
                             lastProcessTime = currentTime
                         }
                     } else if (currentTime - lastProcessTime > 2000) {
                         runOnUiThread {
-                            val status = if (isEdgeDetectionEnabled) {
-                                "Edge detection enabled but processor not ready"
-                            } else {
-                                "Camera active - Edge detection OFF"
-                            }
-                            statusText.text = "$status - Frame: $frameCount"
+                            statusText.text = "Camera active - Processor not ready - Frame: $frameCount"
                         }
                         lastProcessTime = currentTime
                     }
@@ -261,7 +269,7 @@ class MainActivity : AppCompatActivity() {
             image.close()
         }
         
-        private fun processImageForEdgeDetection(image: ImageProxy) {
+        private fun processImageForEffects(image: ImageProxy) {
             try {
                 // Convert ImageProxy to byte array
                 val buffer = image.planes[0].buffer
@@ -271,16 +279,14 @@ class MainActivity : AppCompatActivity() {
                 // Log frame processing
                 Log.d(TAG, "Processing frame: ${image.width}x${image.height}, bytes: ${bytes.size}")
                 
-                // Call native processor
+                // Call native processor (always process for bitmap creation)
                 val processedData = NativeLib.processFrameData(bytes, image.width, image.height, isEdgeDetectionEnabled)
                 
                 if (processedData != null) {
                     Log.d(TAG, "Frame processed successfully, output size: ${processedData.size}")
-                    if (isEdgeDetectionEnabled) {
-                        // Convert processed data to bitmap and display
-                        convertAndDisplayBitmap(processedData, image.width, image.height)
-                        Log.d(TAG, "Edge detection applied and displayed")
-                    }
+                    // Convert processed data to bitmap and display with appropriate effects
+                    convertAndDisplayBitmap(processedData, bytes, image.width, image.height)
+                    Log.d(TAG, "Frame processed and displayed with ${if (isEdgeDetectionEnabled) "edge detection" else "OpenGL effects"}")
                 } else {
                     Log.w(TAG, "Frame processing returned null")
                 }
@@ -290,7 +296,36 @@ class MainActivity : AppCompatActivity() {
             }
         }
         
-        private fun convertAndDisplayBitmap(processedData: ByteArray, width: Int, height: Int) {
+        private fun createOriginalBitmap(cameraData: ByteArray, width: Int, height: Int): Bitmap? {
+            return try {
+                // Convert YUV camera data to grayscale for simplicity
+                val pixels = IntArray(width * height)
+                for (i in 0 until width * height) {
+                    if (i < cameraData.size) {
+                        val gray = cameraData[i].toInt() and 0xFF
+                        pixels[i] = Color.argb(255, gray, gray, gray)
+                    }
+                }
+                
+                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                bitmap.setPixels(pixels, 0, width, 0, 0, width, height)
+                
+                // Rotate to match camera orientation
+                val matrix = Matrix().apply { postRotate(90f) }
+                val rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true)
+                
+                if (bitmap != rotatedBitmap) {
+                    bitmap.recycle()
+                }
+                
+                rotatedBitmap
+            } catch (e: Exception) {
+                Log.e(TAG, "Error creating original bitmap: ${e.message}")
+                null
+            }
+        }
+        
+        private fun convertAndDisplayBitmap(processedData: ByteArray, cameraData: ByteArray, width: Int, height: Int) {
             try {
                 // Create bitmap from processed data
                 val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
@@ -310,22 +345,29 @@ class MainActivity : AppCompatActivity() {
                 }
                 val rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true)
                 
-                // Update display with bitmap - use OpenGL for effects
+                // Update display with bitmap - show edge detection OR OpenGL effects
                 runOnUiThread {
                     if (isEdgeDetectionEnabled) {
-                        // Show edge detection in regular ImageView
+                        // Show edge detection result in regular ImageView
                         processedImageView.setImageBitmap(rotatedBitmap)
                         processedImageView.visibility = View.VISIBLE
                         processedImageView.scaleType = ImageView.ScaleType.FIT_CENTER
                         processedImageView.adjustViewBounds = true
                         
                         glSurfaceView.visibility = View.GONE
+                        Log.d(TAG, "Displaying edge detection result")
                     } else {
-                        // Show original image with OpenGL effects
-                        glRenderer.updateTexture(rotatedBitmap)
-                        glSurfaceView.requestRender()
-                        glSurfaceView.visibility = View.VISIBLE
-                        processedImageView.visibility = View.GONE
+                        // Show original camera feed with OpenGL effects applied
+                        // For effects, we want the original image, so get it from the raw camera data
+                        val originalBitmap = createOriginalBitmap(cameraData, width, height)
+                        if (originalBitmap != null) {
+                            glRenderer.updateTexture(originalBitmap)
+                            glSurfaceView.requestRender()
+                            glSurfaceView.visibility = View.VISIBLE
+                            processedImageView.visibility = View.GONE
+                            Log.d(TAG, "Displaying OpenGL effects")
+                            originalBitmap.recycle()
+                        }
                     }
                 }
                 

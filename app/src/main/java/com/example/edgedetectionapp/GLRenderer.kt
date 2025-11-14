@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.GLUtils
+import android.util.Log
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -11,6 +12,9 @@ import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
 class GLRenderer : GLSurfaceView.Renderer {
+    companion object {
+        private const val TAG = "GLRenderer"
+    }
     private var program: Int = 0
     private var vertexBuffer: FloatBuffer
     private var textureId: Int = 0
@@ -129,12 +133,14 @@ class GLRenderer : GLSurfaceView.Renderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
         
         if (needsTextureUpdate && bitmap != null) {
+            Log.d(TAG, "Uploading texture to GPU")
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId)
             GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0)
             needsTextureUpdate = false
         }
         
-        GLES20.glUseProgram(program)
+        if (bitmap != null) {
+            GLES20.glUseProgram(program)
         
         val positionHandle = GLES20.glGetAttribLocation(program, "aPosition")
         val texCoordHandle = GLES20.glGetAttribLocation(program, "aTexCoord")
@@ -153,10 +159,13 @@ class GLRenderer : GLSurfaceView.Renderer {
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId)
         GLES20.glUniform1i(textureHandle, 0)
         
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
-        
-        GLES20.glDisableVertexAttribArray(positionHandle)
-        GLES20.glDisableVertexAttribArray(texCoordHandle)
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
+            
+            GLES20.glDisableVertexAttribArray(positionHandle)
+            GLES20.glDisableVertexAttribArray(texCoordHandle)
+        } else {
+            Log.w(TAG, "No bitmap available for rendering")
+        }
     }
 
     private fun createShaderProgram() {
@@ -178,12 +187,14 @@ class GLRenderer : GLSurfaceView.Renderer {
 
     fun setEffect(effect: EffectType) {
         if (currentEffect != effect) {
+            Log.d(TAG, "Changing effect from $currentEffect to $effect")
             currentEffect = effect
             createShaderProgram()
         }
     }
 
     fun updateTexture(bitmap: Bitmap) {
+        Log.d(TAG, "Updating texture with bitmap: ${bitmap.width}x${bitmap.height}")
         this.bitmap = bitmap
         needsTextureUpdate = true
     }

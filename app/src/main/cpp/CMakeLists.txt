@@ -5,26 +5,21 @@ project("edgedetectionapp")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# OpenCV path (adjust this to your extracted OpenCV location)
-# Using absolute path to ensure CMake finds OpenCV correctly
-set(OpenCV_DIR "C:/Users/raksh/AndroidStudioProjects/opencv-android-sdk/sdk/native/jni")
-
-# Find OpenCV
-find_package(OpenCV REQUIRED)
-
-# Include directories
-include_directories(${OpenCV_INCLUDE_DIRS})
-
 # Add native library
 add_library(native-lib SHARED
         native-lib.cpp
-        opencv_processor.cpp
-        gl_renderer.cpp)
+        opencv_processor_stub.cpp
+        gl_renderer_stub.cpp)
+
+# Find required libraries
+find_library(log-lib log)
+find_library(android-lib android)
+find_library(EGL-lib EGL)
+find_library(GLESv2-lib GLESv2)
 
 # Link libraries
 target_link_libraries(native-lib
-        ${OpenCV_LIBS}
-        android
-        log
-        GLESv2
-        EGL)
+        ${log-lib}
+        ${android-lib}
+        ${EGL-lib}
+        ${GLESv2-lib})

@@ -21,8 +21,7 @@ android {
             cmake {
                 cppFlags += "-std=c++17"
                 arguments += listOf(
-                    "-DANDROID_STL=c++_shared",
-                    "-DOPENCV_DIR=C:/Users/raksh/AndroidStudioProjects/opencv-android-sdk/sdk/native/jni"
+                    "-DANDROID_STL=c++_shared"
                 )
             }
         }

@@ -1,8 +1,8 @@
 #ifndef EDGEDETECTION_OPENCV_PROCESSOR_H
 #define EDGEDETECTION_OPENCV_PROCESSOR_H
 
-#include <opencv2/opencv.hpp>
-#include <opencv2/imgproc.hpp>
+// #include <opencv2/opencv.hpp>
+// #include <opencv2/imgproc.hpp>
 #include <jni.h>
 
 class OpenCVProcessor {
@@ -10,13 +10,16 @@ public:
     OpenCVProcessor();
     ~OpenCVProcessor();
     
-    // Process frame and return address of processed Mat
-    jlong processFrame(jlong inputMatAddr, bool applyEdgeDetection);
+    // Stub methods that return void* instead of cv::Mat
+    void* processFrame(void* inputFrame, bool applyEdgeDetection);
+    void* applyEdgeDetection(void* frame);
+    void* convertToGray(void* frame);
     
 private:
-    cv::Mat processedMat;
-    cv::Mat grayMat;
-    cv::Mat edgesMat;
+    // Remove OpenCV-specific members for now
+    // cv::Mat processedMat;
+    // cv::Mat grayMat;
+    // cv::Mat edgesMat;
 };
 
 #endif // EDGEDETECTION_OPENCV_PROCESSOR_H

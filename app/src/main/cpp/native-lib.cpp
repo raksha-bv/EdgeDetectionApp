@@ -12,7 +12,7 @@ OpenCVProcessor* processor = nullptr;
 GLRenderer* renderer = nullptr;
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_yourname_edgedetection_NativeLib_stringFromJNI(
+Java_com_example_edgedetectionapp_NativeLib_stringFromJNI(
         JNIEnv* env,
         jobject /* this */) {
     std::string hello = "OpenCV + OpenGL Native Library Ready";
@@ -20,7 +20,7 @@ Java_com_yourname_edgedetection_NativeLib_stringFromJNI(
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_yourname_edgedetection_NativeLib_initProcessor(
+Java_com_example_edgedetectionapp_NativeLib_initProcessor(
         JNIEnv* env,
         jobject /* this */) {
     LOGD("Initializing OpenCV Processor");
@@ -30,7 +30,7 @@ Java_com_yourname_edgedetection_NativeLib_initProcessor(
 }
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_com_yourname_edgedetection_NativeLib_processFrame(
+Java_com_example_edgedetectionapp_NativeLib_processFrame(
         JNIEnv* env,
         jobject /* this */,
         jlong matAddr,
@@ -41,11 +41,13 @@ Java_com_yourname_edgedetection_NativeLib_processFrame(
         return 0;
     }
     
-    return processor->processFrame(matAddr, applyEdgeDetection);
+    // Convert jlong to void* and back for stub implementation
+    void* result = processor->processFrame((void*)matAddr, applyEdgeDetection);
+    return (jlong)result;
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_yourname_edgedetection_NativeLib_releaseProcessor(
+Java_com_example_edgedetectionapp_NativeLib_releaseProcessor(
         JNIEnv* env,
         jobject /* this */) {
     LOGD("Releasing OpenCV Processor");
@@ -56,7 +58,7 @@ Java_com_yourname_edgedetection_NativeLib_releaseProcessor(
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_yourname_edgedetection_NativeLib_initRenderer(
+Java_com_example_edgedetectionapp_NativeLib_initRenderer(
         JNIEnv* env,
         jobject /* this */,
         jint width,
@@ -65,25 +67,26 @@ Java_com_yourname_edgedetection_NativeLib_initRenderer(
     if (renderer == nullptr) {
         renderer = new GLRenderer();
     }
-    renderer->init(width, height);
+    renderer->initialize();
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_yourname_edgedetection_NativeLib_renderFrame(
+Java_com_example_edgedetectionapp_NativeLib_renderFrame(
         JNIEnv* env,
         jobject /* this */,
         jlong matAddr) {
     if (renderer != nullptr) {
-        renderer->render(matAddr);
+        renderer->renderFrame((void*)matAddr, 0, 0);
     }
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_yourname_edgedetection_NativeLib_releaseRenderer(
+Java_com_example_edgedetectionapp_NativeLib_releaseRenderer(
         JNIEnv* env,
         jobject /* this */) {
     LOGD("Releasing OpenGL Renderer");
     if (renderer != nullptr) {
+        renderer->cleanup();
         delete renderer;
         renderer = nullptr;
     }

@@ -22,9 +22,9 @@ _Browser-based edge detection with interactive controls_
 
 ### Demo Video
 
-https://github.com/raksha-bv/EdgeDetectionApp/blob/main/media/videos/working_app_recording.mp4
+[![Android App Demo](https://img.youtube.com/vi/e7IrhoX7bJE/0.jpg)](https://www.youtube.com/shorts/e7IrhoX7bJE)
 
-_Live demonstration of Android app edge detection capabilities_
+_Live demonstration of Android app edge detection capabilities - Click to watch on YouTube_
 
 ## Features
 

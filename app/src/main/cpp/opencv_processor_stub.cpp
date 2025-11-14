@@ -1,16 +1,12 @@
 #include "opencv_processor.h"
-// #include <opencv2/opencv.hpp>
-// #include <opencv2/imgproc.hpp>
 #include <android/log.h>
 
 #define LOG_TAG "OpenCVProcessor"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 
-// using namespace cv;
-
 OpenCVProcessor::OpenCVProcessor() {
-    LOGI("OpenCVProcessor initialized (stub)");
+    LOGI("OpenCVProcessor initialized (stub version - ready for OpenCV integration)");
 }
 
 OpenCVProcessor::~OpenCVProcessor() {
@@ -19,21 +15,41 @@ OpenCVProcessor::~OpenCVProcessor() {
 
 // Stub implementation for processFrame
 void* OpenCVProcessor::processFrame(void* inputFrame, bool applyEdgeDetection) {
-    LOGI("processFrame called (stub implementation)");
-    // Return the input frame unchanged for now
+    LOGI("Processing frame (stub) - edge detection: %s", applyEdgeDetection ? "ON" : "OFF");
+    
+    if (inputFrame == nullptr) {
+        LOGE("Input frame is null");
+        return nullptr;
+    }
+    
+    // For now, just return the input frame unchanged
+    // In a real implementation, this would process the image data
+    LOGI("Frame processing complete (stub - no actual processing)");
     return inputFrame;
 }
 
-// Stub implementation for applyEdgeDetection
 void* OpenCVProcessor::applyEdgeDetection(void* frame) {
-    LOGI("applyEdgeDetection called (stub implementation)");
-    // Return the frame unchanged for now
+    LOGI("Applying edge detection (stub)");
+    
+    if (frame == nullptr) {
+        LOGE("Frame is null for edge detection");
+        return nullptr;
+    }
+    
+    // Stub implementation - would apply Canny edge detection with OpenCV
+    LOGI("Edge detection applied (stub)");
     return frame;
 }
 
-// Stub implementation for convertToGray
 void* OpenCVProcessor::convertToGray(void* frame) {
-    LOGI("convertToGray called (stub implementation)");
-    // Return the frame unchanged for now
+    LOGI("Converting to grayscale (stub)");
+    
+    if (frame == nullptr) {
+        LOGE("Frame is null for grayscale conversion");
+        return nullptr;
+    }
+    
+    // Stub implementation - would convert to grayscale with OpenCV
+    LOGI("Grayscale conversion complete (stub)");
     return frame;
 }

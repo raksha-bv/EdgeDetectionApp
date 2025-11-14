@@ -5,7 +5,7 @@ project("edgedetectionapp")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Add native library
+# Add native library - using stub implementations but prepared for OpenCV
 add_library(native-lib SHARED
         native-lib.cpp
         opencv_processor_stub.cpp

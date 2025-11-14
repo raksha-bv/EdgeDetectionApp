@@ -11,22 +11,25 @@ Try the edge detection features directly in your browser without any installatio
 ## Screenshots
 
 ### Android Application
+
 ![Android App - Edge Detection](media/screenshots/android/working_screenshot.webp)
-*Real-time edge detection processing on Android device*
+_Real-time edge detection processing on Android device_
 
 ### Web Interface
+
 ![Web Interface - Edge Detection](media/screenshots/web/working_web.png)
-*Browser-based edge detection with interactive controls*
+_Browser-based edge detection with interactive controls_
 
 ### Demo Video
 
-https://github.com/raksha-bv/EdgeDetectionApp/assets/raksha-bv/working_app_recording.mp4
+https://github.com/raksha-bv/EdgeDetectionApp/blob/main/media/videos/working_app_recording.mp4
 
-*Live demonstration of Android app edge detection capabilities*
+_Live demonstration of Android app edge detection capabilities_
 
 ## Features
 
 ### Android Application
+
 - **Real-time Camera Processing**: Live edge detection using device camera
 - **Native C++ Backend**: High-performance image processing with OpenCV integration
 - **OpenGL Rendering**: Hardware-accelerated graphics rendering
@@ -35,6 +38,7 @@ https://github.com/raksha-bv/EdgeDetectionApp/assets/raksha-bv/working_app_recor
 - **Camera Permissions**: Seamless permission handling for camera access
 
 ### Web Interface
+
 - **Modern Web App**: Next.js-based web application with TypeScript
 - **Image Upload**: Drag & drop or click to upload images
 - **Client-side Processing**: Real-time edge detection in the browser
@@ -45,6 +49,7 @@ https://github.com/raksha-bv/EdgeDetectionApp/assets/raksha-bv/working_app_recor
 ## Tech Stack
 
 ### Android App
+
 - **Language**: Kotlin
 - **Build System**: Gradle with Kotlin DSL
 - **UI Framework**: Android Views with CameraX
@@ -55,6 +60,7 @@ https://github.com/raksha-bv/EdgeDetectionApp/assets/raksha-bv/working_app_recor
 - **Minimum SDK**: Android API 24 (Android 7.0)
 
 ### Web Application
+
 - **Framework**: Next.js 14 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
@@ -62,6 +68,7 @@ https://github.com/raksha-bv/EdgeDetectionApp/assets/raksha-bv/working_app_recor
 - **Build Tool**: npm/yarn
 
 ### Native Backend
+
 - **Language**: C++17
 - **Image Processing**: OpenCV
 - **Graphics**: OpenGL ES, EGL
@@ -98,6 +105,7 @@ EdgeDetectionApp/
 ### Prerequisites
 
 - **Android Development**:
+
   - Android Studio 2023.1+
   - Android SDK 34
   - NDK 25+
@@ -111,22 +119,26 @@ EdgeDetectionApp/
 ### Android App Setup
 
 1. **Clone the repository**:
+
    ```bash
    git clone https://github.com/raksha-bv/EdgeDetectionApp.git
    cd EdgeDetectionApp
    ```
 
 2. **Open in Android Studio**:
+
    - Open Android Studio
    - Select "Open an Existing Project"
    - Navigate to the EdgeDetectionApp folder
 
 3. **Configure OpenCV** (if not already set up):
+
    - Download OpenCV Android SDK
    - Import the opencv module
    - Sync project
 
 4. **Build and Run**:
+
    ```bash
    ./gradlew clean
    ./gradlew :app:assembleDebug
@@ -140,16 +152,19 @@ EdgeDetectionApp/
 ### Web Interface Setup
 
 1. **Navigate to web interface**:
+
    ```bash
    cd web-interface
    ```
 
 2. **Install dependencies**:
+
    ```bash
    npm install
    ```
 
 3. **Start development server**:
+
    ```bash
    npm run dev
    ```
@@ -162,18 +177,19 @@ EdgeDetectionApp/
 ### Android Configuration
 
 **Gradle Configuration** (`app/build.gradle.kts`):
+
 ```kotlin
 android {
     compileSdk = 34
     minSdk = 24
     targetSdk = 34
-    
+
     externalNativeBuild {
         cmake {
             cppFlags += "-std=c++17"
         }
     }
-    
+
     ndk {
         abiFilters += listOf("arm64-v8a", "armeabi-v7a")
     }
@@ -181,6 +197,7 @@ android {
 ```
 
 **Native Dependencies** (`CMakeLists.txt`):
+
 - OpenCV 4.x
 - OpenGL ES 2.0
 - EGL
@@ -189,6 +206,7 @@ android {
 ### Web Configuration
 
 **Package Dependencies** (`package.json`):
+
 - Next.js 14
 - React 18
 - TypeScript 5
@@ -262,12 +280,14 @@ Download Handler
 ## Supported Platforms
 
 ### Android
+
 - **Minimum**: Android 7.0 (API 24)
 - **Target**: Android 14 (API 34)
 - **Architectures**: ARM64-v8a, ARMv7
 - **Permissions**: Camera access required
 
 ### Web
+
 - **Browsers**: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
 - **Devices**: Desktop, tablet, and mobile responsive
 - **File Formats**: JPEG, PNG, WebP
@@ -277,6 +297,7 @@ Download Handler
 ### Building from Source
 
 **Android**:
+
 ```bash
 # Clean build
 ./gradlew clean
@@ -289,6 +310,7 @@ Download Handler
 ```
 
 **Web**:
+
 ```bash
 # Development
 npm run dev
@@ -303,6 +325,7 @@ npm run start
 ### Testing
 
 **Android**:
+
 ```bash
 # Unit tests
 ./gradlew test
@@ -312,6 +335,7 @@ npm run start
 ```
 
 **Web**:
+
 ```bash
 # Lint check
 npm run lint

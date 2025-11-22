@@ -3,21 +3,21 @@ package com.example.edgedetectionapp
 import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.graphics.ImageFormat
 import android.graphics.Matrix
-import android.graphics.Rect
-import android.graphics.YuvImage
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.Spinner
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
@@ -26,8 +26,6 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import java.io.ByteArrayOutputStream
-import java.nio.ByteBuffer
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -42,12 +40,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var statusText: TextView
     private lateinit var startCameraButton: ImageButton
     private lateinit var edgeDetectionSwitch: Switch
+    private lateinit var shaderEffectSpinner: Spinner
     private lateinit var cameraPreview: PreviewView
     private lateinit var processedImageView: ImageView
     private lateinit var cameraExecutor: ExecutorService
     
     private var isCameraStarted = false
     private var isEdgeDetectionEnabled = false
+    private var currentShaderEffect = 0  // 0=Normal, 1=Grayscale, 2=Invert, 3=Edge Enhance
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,13 +57,17 @@ class MainActivity : AppCompatActivity() {
 
         // Initialize UI components
         statusText = findViewById(R.id.statusText)
-        startCameraButton = findViewById<ImageButton>(R.id.startCameraButton)
+        startCameraButton = findViewById(R.id.startCameraButton)
         edgeDetectionSwitch = findViewById(R.id.edgeDetectionSwitch)
+        shaderEffectSpinner = findViewById(R.id.shaderEffectSpinner)
         cameraPreview = findViewById(R.id.cameraPreview)
         processedImageView = findViewById(R.id.processedImageView)
         
         // Initialize camera executor
         cameraExecutor = Executors.newSingleThreadExecutor()
+
+        // Setup shader effects spinner
+        setupShaderEffects()
 
         // Camera button click
         startCameraButton.setOnClickListener {
@@ -82,10 +86,38 @@ class MainActivity : AppCompatActivity() {
         edgeDetectionSwitch.setOnCheckedChangeListener { _, isChecked ->
             isEdgeDetectionEnabled = isChecked
             Log.d(TAG, "Edge detection ${if (isChecked) "enabled" else "disabled"}")
+            
+            // Show/hide processed view based on edge detection or shader effect
+            if (!isChecked && currentShaderEffect == 0) {
+                processedImageView.visibility = View.GONE
+            }
         }
 
         // Initial status
         updateStatus()
+    }
+    
+    private fun setupShaderEffects() {
+        val effects = arrayOf("Normal", "Grayscale", "Invert", "Edge Enhance")
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, effects)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        shaderEffectSpinner.adapter = adapter
+        
+        shaderEffectSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                currentShaderEffect = position
+                Log.d(TAG, "Shader effect changed to: ${effects[position]}")
+                
+                // Show processed view if any effect is selected
+                if (position != 0 || isEdgeDetectionEnabled) {
+                    processedImageView.visibility = View.VISIBLE
+                } else {
+                    processedImageView.visibility = View.GONE
+                }
+            }
+            
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
     }
     
     private fun startCamera() {
@@ -94,12 +126,21 @@ class MainActivity : AppCompatActivity() {
         cameraProviderFuture.addListener({
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
             
-            val preview = Preview.Builder().build().also {
-                it.setSurfaceProvider(cameraPreview.surfaceProvider)
-            }
+            // Use FILL_CENTER to remove letterboxing
+            cameraPreview.scaleType = PreviewView.ScaleType.FILL_CENTER
             
-            // Add image analysis for edge detection
+            // Use 16:9 aspect ratio for better screen coverage
+            val aspectRatio = AspectRatio.RATIO_16_9
+            
+            val preview = Preview.Builder()
+                .setTargetAspectRatio(aspectRatio)
+                .build()
+                .also {
+                    it.setSurfaceProvider(cameraPreview.surfaceProvider)
+                }
+            
             val imageAnalyzer = ImageAnalysis.Builder()
+                .setTargetAspectRatio(aspectRatio)
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build()
                 .also { 
@@ -114,10 +155,9 @@ class MainActivity : AppCompatActivity() {
                 
                 isCameraStarted = true
                 startCameraButton.setImageResource(android.R.drawable.ic_media_pause)
-                
-                statusText.text = "Camera active - Ready for edge detection!"
+                statusText.text = "Camera active - Ready for effects!"
                 statusText.visibility = View.VISIBLE
-                Log.d(TAG, "Camera started successfully with image analysis")
+                Log.d(TAG, "Camera started successfully with 16:9 aspect ratio")
                 
             } catch (exc: Exception) {
                 Log.e(TAG, "Camera start failed", exc)
@@ -138,6 +178,7 @@ class MainActivity : AppCompatActivity() {
             
             statusText.text = "Camera stopped"
             statusText.visibility = View.GONE
+            processedImageView.visibility = View.GONE
             Log.d(TAG, "Camera stopped")
             
         }, ContextCompat.getMainExecutor(this))
@@ -166,7 +207,7 @@ class MainActivity : AppCompatActivity() {
                 val result = NativeLib.stringFromJNI()
                 val processorInit = NativeLib.initializeProcessor()
                 val processorStatus = if (processorInit) "✅ Processor Ready" else "⚠️ Processor Pending"
-                statusText.text = "✅ $result\n$processorStatus\nTap buttons to test"
+                statusText.text = "✅ $result\n$processorStatus\nTap camera button to start"
             } catch (e: Exception) {
                 statusText.text = "⚠️ Native lib error: ${e.message}"
             }
@@ -188,30 +229,33 @@ class MainActivity : AppCompatActivity() {
             frameCount++
             val currentTime = System.currentTimeMillis()
             
-            // Process every 10th frame to avoid overloading (3fps on 30fps camera)
-            if (frameCount % 10 == 0) {
+            // Process every 5th frame for better performance (6fps on 30fps camera)
+            if (frameCount % 5 == 0) {
                 try {
-                    // Always process frames for display (for OpenGL effects or edge detection)
-                    if (NativeLib.isProcessorReady()) {
-                        processImageForEffects(image)
-                        
-                        // Update status every 2 seconds
-                        if (currentTime - lastProcessTime > 2000) {
-                            runOnUiThread {
-                                val status = if (isEdgeDetectionEnabled) {
-                                    "Processing with edge detection"
-                                } else {
-                                    "Processing with OpenGL effects"
+                    // Only process if edge detection or shader effect is enabled
+                    if (isEdgeDetectionEnabled || currentShaderEffect != 0) {
+                        if (NativeLib.isProcessorReady()) {
+                            processImageForEffects(image)
+                            
+                            // Update status every 2 seconds
+                            if (currentTime - lastProcessTime > 2000) {
+                                runOnUiThread {
+                                    val effectName = when (currentShaderEffect) {
+                                        1 -> "Grayscale"
+                                        2 -> "Invert"
+                                        3 -> "Edge Enhance"
+                                        else -> if (isEdgeDetectionEnabled) "Edge Detection" else "Normal"
+                                    }
+                                    statusText.text = "Effect: $effectName | Frame: $frameCount"
                                 }
-                                statusText.text = "$status - Frame: $frameCount"
+                                lastProcessTime = currentTime
+                            }
+                        } else if (currentTime - lastProcessTime > 2000) {
+                            runOnUiThread {
+                                statusText.text = "Camera active - Processor not ready - Frame: $frameCount"
                             }
                             lastProcessTime = currentTime
                         }
-                    } else if (currentTime - lastProcessTime > 2000) {
-                        runOnUiThread {
-                            statusText.text = "Camera active - Processor not ready - Frame: $frameCount"
-                        }
-                        lastProcessTime = currentTime
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "Frame processing error: ${e.message}")
@@ -228,17 +272,17 @@ class MainActivity : AppCompatActivity() {
                 val bytes = ByteArray(buffer.remaining())
                 buffer.get(bytes)
                 
-                // Log frame processing
-                Log.d(TAG, "Processing frame: ${image.width}x${image.height}, bytes: ${bytes.size}")
-                
-                // Call native processor (always process for bitmap creation)
-                val processedData = NativeLib.processFrameData(bytes, image.width, image.height, isEdgeDetectionEnabled)
+                // Call native processor
+                val processedData = NativeLib.processFrameData(
+                    bytes, 
+                    image.width, 
+                    image.height, 
+                    isEdgeDetectionEnabled
+                )
                 
                 if (processedData != null) {
-                    Log.d(TAG, "Frame processed successfully, output size: ${processedData.size}")
-                    // Convert processed data to bitmap and display with appropriate effects
+                    // Convert processed data to bitmap and apply shader effects
                     convertAndDisplayBitmap(processedData, bytes, image.width, image.height)
-                    Log.d(TAG, "Frame processed and displayed with ${if (isEdgeDetectionEnabled) "edge detection" else "OpenGL effects"}")
                 } else {
                     Log.w(TAG, "Frame processing returned null")
                 }
@@ -248,71 +292,66 @@ class MainActivity : AppCompatActivity() {
             }
         }
         
-        private fun createOriginalBitmap(cameraData: ByteArray, width: Int, height: Int): Bitmap? {
-            return try {
-                // Convert YUV camera data to grayscale for simplicity
+        private fun convertAndDisplayBitmap(
+            processedData: ByteArray, 
+            cameraData: ByteArray, 
+            width: Int, 
+            height: Int
+        ) {
+            try {
+                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                
                 val pixels = IntArray(width * height)
-                for (i in 0 until width * height) {
-                    if (i < cameraData.size) {
-                        val gray = cameraData[i].toInt() and 0xFF
-                        pixels[i] = Color.argb(255, gray, gray, gray)
+                
+                // Apply shader effects
+                for (i in processedData.indices.take(width * height)) {
+                    val gray = processedData[i].toInt() and 0xFF
+                    
+                    val color = when (currentShaderEffect) {
+                        1 -> {
+                            // Grayscale (already grayscale, just apply)
+                            Color.argb(255, gray, gray, gray)
+                        }
+                        2 -> {
+                            // Invert
+                            val inverted = 255 - gray
+                            Color.argb(255, inverted, inverted, inverted)
+                        }
+                        3 -> {
+                            // Edge Enhance (boost contrast)
+                            val enhanced = ((gray - 128) * 1.8 + 128).toInt().coerceIn(0, 255)
+                            Color.argb(255, enhanced, enhanced, enhanced)
+                        }
+                        else -> {
+                            // Normal (no shader effect)
+                            Color.argb(255, gray, gray, gray)
+                        }
                     }
+                    pixels[i] = color
                 }
                 
-                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
                 bitmap.setPixels(pixels, 0, width, 0, 0, width, height)
                 
                 // Rotate to match camera orientation
-                val matrix = Matrix().apply { postRotate(90f) }
-                val rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true)
-                
-                if (bitmap != rotatedBitmap) {
-                    bitmap.recycle()
-                }
-                
-                rotatedBitmap
-            } catch (e: Exception) {
-                Log.e(TAG, "Error creating original bitmap: ${e.message}")
-                null
-            }
-        }
-        
-        private fun convertAndDisplayBitmap(processedData: ByteArray, cameraData: ByteArray, width: Int, height: Int) {
-            try {
-                // Create bitmap from processed data
-                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-                
-                // Convert grayscale data to ARGB format
-                val pixels = IntArray(width * height)
-                for (i in processedData.indices.take(width * height)) {
-                    val gray = processedData[i].toInt() and 0xFF
-                    pixels[i] = Color.argb(255, gray, gray, gray)
-                }
-                
-                bitmap.setPixels(pixels, 0, width, 0, 0, width, height)
-                
-                // Fix rotation - rotate 90 degrees clockwise to match camera orientation
                 val matrix = Matrix().apply {
                     postRotate(90f)
                 }
                 val rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true)
                 
-                // Update display with bitmap
                 runOnUiThread {
-                    if (isEdgeDetectionEnabled) {
-                        processedImageView.setImageBitmap(rotatedBitmap)
-                        processedImageView.visibility = View.VISIBLE
-                        processedImageView.scaleType = ImageView.ScaleType.FIT_CENTER
-                        processedImageView.adjustViewBounds = true
-                        Log.d(TAG, "Displaying edge detection result")
+                    // Show processed view if edge detection or any shader effect is active
+                    if (isEdgeDetectionEnabled || currentShaderEffect != 0) {
+                        processedImageView.apply {
+                            setImageBitmap(rotatedBitmap)
+                            visibility = View.VISIBLE
+                            scaleType = ImageView.ScaleType.CENTER_CROP
+                        }
                     } else {
-                        // No edge detection - hide the processed image view
                         processedImageView.visibility = View.GONE
-                        Log.d(TAG, "Edge detection disabled - hiding processed image")
                     }
                 }
                 
-                // Clean up original bitmap
+                // Clean up
                 if (bitmap != rotatedBitmap) {
                     bitmap.recycle()
                 }

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -14,25 +15,15 @@
         android:padding="16dp"
         android:elevation="4dp">
 
-        <!-- Logo Row -->
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="start|center_vertical"
-            android:layout_marginBottom="12dp">
+            android:text="Edge Detector"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Edge Detector"
-                android:textColor="@android:color/white"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-        </LinearLayout>
-
-        <!-- Status Text -->
         <TextView
             android:id="@+id/statusText"
             android:layout_width="match_parent"
@@ -51,7 +42,8 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:background="@drawable/toggle_background"
-            android:padding="12dp">
+            android:padding="12dp"
+            android:layout_marginBottom="8dp">
 
             <TextView
                 android:layout_width="0dp"
@@ -66,9 +58,19 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp" />
-
         </LinearLayout>
-    </LinearLayout>    <!-- Display Container -->
+
+        <!-- Shader Effects Spinner -->
+        <Spinner
+            android:id="@+id/shaderEffectSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/white"
+            android:padding="12dp" />
+
+    </LinearLayout>
+
+    <!-- Display Container -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -99,11 +101,11 @@
             <androidx.camera.view.PreviewView
                 android:id="@+id/cameraPreview"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-
+                android:layout_height="match_parent"
+                app:scaleType="fillCenter" />
         </LinearLayout>
 
-        <!-- Edge Detection Output -->
+        <!-- Edge Detection / Shader Output -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -115,7 +117,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Edge Detection Output"
+                android:text="Processed Output (Shaders)"
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:padding="6dp"
@@ -123,14 +125,14 @@
                 android:textColor="@android:color/white"
                 android:gravity="center" />
 
+            <!-- Use ImageView for now, GLSurfaceView for advanced -->
             <ImageView
                 android:id="@+id/processedImageView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@android:color/black"
-                android:scaleType="fitCenter"
-                android:adjustViewBounds="true" />
-
+                android:scaleType="centerCrop"
+                android:adjustViewBounds="false" />
         </LinearLayout>
     </LinearLayout>
 
@@ -150,7 +152,6 @@
             android:src="@drawable/ic_camera"
             android:contentDescription="Start Camera"
             android:scaleType="centerInside" />
-
     </FrameLayout>
 
 </LinearLayout>

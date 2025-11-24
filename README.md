@@ -1,51 +1,38 @@
 # Edge Detection App
 
-A comprehensive edge detection application featuring both Android mobile app and web interface implementations. This project demonstrates real-time image processing capabilities using OpenCV, native C++ processing, and modern web technologies.
+A cross-platform app for real-time edge detection on Android and web, using OpenCV, C++, and modern web tech.
 
 ## Live Demo
 
-🌐 **Web Application**: [https://edge-detection-app.vercel.app/](https://edge-detection-app.vercel.app/)
-
-Try the edge detection features directly in your browser without any installation required!
-
-### Demo Video
-
-[![Android App Demo](https://img.youtube.com/vi/e7IrhoX7bJE/0.jpg)](https://www.youtube.com/shorts/e7IrhoX7bJE)
-
-_Live demonstration of Android app edge detection capabilities - Click to watch on YouTube_
+- [Web App](https://edge-detection-app.vercel.app/)
+- [Android Demo Video](https://youtube.com/shorts/Y6cHxYe5d8w)
 
 ## Screenshots
 
-### Android Application
-
-![Android App - Edge Detection](media/screenshots/android/working_screenshot.webp)
-
-_Real-time edge detection processing on Android device_
-
-### Web Interface
-
-![Web Interface - Edge Detection](media/screenshots/web/working_web.png)
-_Browser-based edge detection with interactive controls_
+- Android: ![Android](media/screenshots/android/working_screenshot.webp)
+- Web: ![Web](media/screenshots/web/working_web.png)
 
 ## Features
 
-### Android Application
+**Android:**
 
-- **Real-time Camera Processing**: Live edge detection using device camera
-- **Native C++ Backend**: High-performance image processing with OpenCV integration
-- **OpenGL Rendering**: Hardware-accelerated graphics rendering
-- **Toggle Edge Detection**: Switch between normal camera view and edge detection mode
-- **Optimized Performance**: Frame processing with intelligent buffering (3fps processing on 30fps camera)
-- **Camera Permissions**: Seamless permission handling for camera access
+- Real-time camera edge detection
+- Native C++ (OpenCV) backend
+- OpenGL rendering
+- Toggle edge detection
+- Performance optimized (3fps on 30fps camera)
+- Camera permission handling
+- **New:** Invert and Edge Enhancer filters
 
-### Web Interface
+**Web:**
 
-- **Modern Web App**: Next.js-based web application with TypeScript
-- **Image Upload**: Drag & drop or click to upload images
-- **Client-side Processing**: Real-time edge detection in the browser
-- **Interactive Controls**: Adjustable threshold and kernel size parameters
-- **Download Results**: Save processed images
-- **Responsive Design**: Works on desktop and mobile devices
+- Next.js + TypeScript
+- Image upload & processing
+- Real-time edge detection in browser
+- Adjustable controls (threshold, kernel)
+- Download results
+- Responsive design
+- **New:** Invert and Edge Enhancer filters
 
 ## Tech Stack
 
@@ -264,122 +251,32 @@ Download Handler
 
 ## Edge Detection Algorithms
 
-### Implemented Techniques
-
-1. **Canny Edge Detection**: Primary algorithm for robust edge detection
-2. **Sobel Operators**: Gradient-based edge detection
-3. **Gaussian Blur**: Pre-processing for noise reduction
-4. **Threshold Adjustment**: Customizable sensitivity settings
-
-### Performance Optimizations
-
-- **Frame Rate Control**: Process every 10th frame (3fps on 30fps camera)
-- **Memory Management**: Efficient bitmap recycling
-- **Background Processing**: Non-blocking camera operations
-- **Native Code**: C++ implementation for computational efficiency
+- Canny, Sobel, Gaussian blur, threshold adjustment
+- **New:** Invert and Edge Enhancer filters
+- Optimized: frame rate control, memory management, background/native processing
 
 ## Supported Platforms
 
-### Android
-
-- **Minimum**: Android 7.0 (API 24)
-- **Target**: Android 14 (API 34)
-- **Architectures**: ARM64-v8a, ARMv7
-- **Permissions**: Camera access required
-
-### Web
-
-- **Browsers**: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
-- **Devices**: Desktop, tablet, and mobile responsive
-- **File Formats**: JPEG, PNG, WebP
+- Android 7.0+ (API 24+), ARM64-v8a/ARMv7, camera required
+- Web: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+, desktop/mobile, JPEG/PNG/WebP
 
 ## Development
 
-### Building from Source
-
-**Android**:
-
-```bash
-# Clean build
-./gradlew clean
-
-# Debug build
-./gradlew :app:assembleDebug
-
-# Release build
-./gradlew :app:assembleRelease
-```
-
-**Web**:
-
-```bash
-# Development
-npm run dev
-
-# Production build
-npm run build
-
-# Start production server
-npm run start
-```
-
-### Testing
-
-**Android**:
-
-```bash
-# Unit tests
-./gradlew test
-
-# Instrumented tests
-./gradlew connectedAndroidTest
-```
-
-**Web**:
-
-```bash
-# Lint check
-npm run lint
-
-# Type check
-npx tsc --noEmit
-```
-
-### Device Testing
-
-The Android application has been tested on:
-
-- **Physical Device**: Real Android device with camera functionality
-- **Android Emulator**: Android Studio emulator with camera simulation
-- **Multiple API Levels**: Tested on Android API 24-34
+- Android: `./gradlew clean`, `./gradlew :app:assembleDebug`, `./gradlew :app:assembleRelease`
+- Web: `npm run dev`, `npm run build`, `npm run start`
+- Android tests: `./gradlew test` (unit), `./gradlew connectedAndroidTest` (instrumented)
+- Web tests: `npm run lint`, `npx tsc --noEmit`
+- Tested on real devices, emulators, API 24-34
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/new-feature`
-3. Commit changes: `git commit -am 'Add new feature'`
-4. Push to branch: `git push origin feature/new-feature`
-5. Submit a Pull Request
-
-### Development Guidelines
-
-- Follow Kotlin coding conventions for Android code
-- Use TypeScript strict mode for web development
-- Implement proper error handling and logging
-- Write unit tests for new features
-- Update documentation for API changes
+- Fork, branch, commit, push, and open a PR
+- Follow Kotlin/TypeScript conventions, add tests, update docs
 
 ## Acknowledgments
 
-- **OpenCV**: Computer vision library for image processing
-- **Android CameraX**: Modern camera API for Android
-- **Next.js**: React framework for web development
-- **Tailwind CSS**: Utility-first CSS framework
+- OpenCV, CameraX, Next.js, Tailwind CSS
 
 ## Support
 
-For questions, issues, or contributions:
-
-- Create an issue on GitHub
-- Check existing documentation
-- Review the code comments for implementation details
+- For questions or issues: open a GitHub issue or check docs/comments

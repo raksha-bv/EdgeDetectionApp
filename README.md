@@ -4,6 +4,8 @@ A cross-platform app for real-time edge detection on Android and web, using Open
 
 ## Live Demo
 
+- [Web App](https://edge-detection-app.vercel.app/)
+
 ### Android Demo Video
 
 [![Android App Demo](https://img.youtube.com/vi/Y6cHxYe5d8w/0.jpg)](https://youtube.com/shorts/Y6cHxYe5d8w)

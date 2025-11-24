@@ -4,8 +4,11 @@ A cross-platform app for real-time edge detection on Android and web, using Open
 
 ## Live Demo
 
-- [Web App](https://edge-detection-app.vercel.app/)
-- [Android Demo Video](https://youtube.com/shorts/Y6cHxYe5d8w)
+### Android Demo Video
+
+[![Android App Demo](https://img.youtube.com/vi/Y6cHxYe5d8w/0.jpg)](https://youtube.com/shorts/Y6cHxYe5d8w)
+
+_Live demonstration of Android app edge detection capabilities - Click to watch on YouTube_
 
 ## Screenshots
 
@@ -64,190 +67,27 @@ A cross-platform app for real-time edge detection on Android and web, using Open
 
 ## Project Structure
 
-```
-EdgeDetectionApp/
-├── app/                          # Android application
-│   ├── src/main/
-│   │   ├── java/com/example/edgedetectionapp/
-│   │   │   ├── MainActivity.kt   # Main activity with camera integration
-│   │   │   └── NativeLib.kt      # JNI interface for native code
-│   │   ├── cpp/                  # Native C++ code
-│   │   │   ├── native-lib.cpp    # JNI implementation
-│   │   │   ├── opencv_processor.* # OpenCV edge detection
-│   │   │   └── gl_renderer.*     # OpenGL rendering
-│   │   └── res/                  # Android resources
-│   └── build.gradle.kts          # Android app build configuration
-├── opencv/                       # OpenCV Android module
-├── web-interface/                # Next.js web application
-│   ├── src/
-│   │   ├── app/                  # Next.js app router pages
-│   │   └── components/           # React components
-│   ├── package.json
-│   └── README.md
-├── gradle/
-└── build.gradle.kts             # Root build configuration
-```
+`app/` (Android), `opencv/` (OpenCV Android), `web-interface/` (Next.js web), `gradle/`, `build.gradle.kts` (root config)
 
 ## Quick Start
 
-### Prerequisites
-
-- **Android Development**:
-
-  - Android Studio 2023.1+
-  - Android SDK 34
-  - NDK 25+
-  - CMake 3.22.1+
-  - OpenCV Android SDK 4.x
-
-- **Web Development**:
-  - Node.js 18+
-  - npm or yarn
-
-### Android App Setup
-
-1. **Clone the repository**:
-
-   ```bash
-   git clone https://github.com/raksha-bv/EdgeDetectionApp.git
-   cd EdgeDetectionApp
-   ```
-
-2. **Open in Android Studio**:
-
-   - Open Android Studio
-   - Select "Open an Existing Project"
-   - Navigate to the EdgeDetectionApp folder
-
-3. **Configure OpenCV** (if not already set up):
-
-   - Download OpenCV Android SDK
-   - Import the opencv module
-   - Sync project
-
-4. **Build and Run**:
-
-   ```bash
-   ./gradlew clean
-   ./gradlew :app:assembleDebug
-   ```
-
-5. **Install on Device**:
-   - Connect Android device via USB
-   - Enable Developer Options and USB Debugging
-   - Run the app from Android Studio
-
-### Web Interface Setup
-
-1. **Navigate to web interface**:
-
-   ```bash
-   cd web-interface
-   ```
-
-2. **Install dependencies**:
-
-   ```bash
-   npm install
-   ```
-
-3. **Start development server**:
-
-   ```bash
-   npm run dev
-   ```
-
-4. **Open in browser**:
-   - Visit `http://localhost:3000`
+**Android:** Android Studio 2023.1+, SDK 34, NDK 25+, CMake 3.22.1+, OpenCV 4.x. Clone repo, open in Android Studio, import OpenCV, build & run.
+**Web:** Node.js 18+, npm/yarn. `cd web-interface && npm install && npm run dev` (visit http://localhost:3000)
 
 ## Configuration
 
-### Android Configuration
-
-**Gradle Configuration** (`app/build.gradle.kts`):
-
-```kotlin
-android {
-    compileSdk = 34
-    minSdk = 24
-    targetSdk = 34
-
-    externalNativeBuild {
-        cmake {
-            cppFlags += "-std=c++17"
-        }
-    }
-
-    ndk {
-        abiFilters += listOf("arm64-v8a", "armeabi-v7a")
-    }
-}
-```
-
-**Native Dependencies** (`CMakeLists.txt`):
-
-- OpenCV 4.x
-- OpenGL ES 2.0
-- EGL
-- Android NDK
-
-### Web Configuration
-
-**Package Dependencies** (`package.json`):
-
-- Next.js 14
-- React 18
-- TypeScript 5
-- Tailwind CSS 3
+- Android: see `app/build.gradle.kts` and `CMakeLists.txt` (OpenCV 4.x, OpenGL ES 2.0, EGL, NDK)
+- Web: see `web-interface/package.json` (Next.js 14, React 18, TypeScript 5, Tailwind CSS 3)
 
 ## Usage
 
-### Android App
-
-1. **Launch Application**: Open the Edge Detection App on your Android device
-2. **Grant Permissions**: Allow camera access when prompted
-3. **Start Camera**: Tap the camera button to begin live preview
-4. **Toggle Edge Detection**: Use the switch to enable/disable edge detection processing
-5. **View Results**: Processed frames appear in real-time with edge detection overlay
-
-### Web Interface
-
-1. **Upload Image**: Drag and drop or click to select an image file
-2. **Adjust Parameters**: Use controls to modify edge detection settings
-3. **Process Image**: Real-time processing shows edge detection results
-4. **Download Result**: Save the processed image to your device
+- Android: Launch app, grant camera permission, start camera, toggle edge detection, try new filters (invert, edge enhancer)
+- Web: Upload image, adjust controls, process, download result, try new filters (invert, edge enhancer)
 
 ## Architecture
 
-### Android Architecture
-
-```
-User Interface (Kotlin)
-        ↓
-Camera API (CameraX) → Image Analysis
-        ↓
-JNI Bridge (NativeLib.kt)
-        ↓
-Native C++ Processing
-        ↓
-OpenCV Edge Detection ← → OpenGL Rendering
-        ↓
-Processed Frame Output
-```
-
-### Web Architecture
-
-```
-React Components (TypeScript)
-        ↓
-Image Upload Handler
-        ↓
-Client-side Edge Detection
-        ↓
-Canvas Rendering
-        ↓
-Download Handler
-```
+- Android: Kotlin UI → CameraX → JNI → C++ (OpenCV, OpenGL) → Output
+- Web: React (TS) → Upload → Edge Detection → Canvas → Download
 
 ## Edge Detection Algorithms
 

@@ -1,12 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Light Theme Colors -->
-    <color name="primary_color">#5DADE2</color>
-    <color name="primary_light">#D6EAF8</color>
-    <color name="accent_color">#3498DB</color>
-    <color name="card_background">#FFFFFF</color>
-    <color name="button_primary">#4CAF50</color>
-    <color name="button_secondary">#666666</color>
+    <!-- Futuristic Minimal Theme - 5 Colors -->
+    
+    <!-- Primary: Deep Space Blue - Main headers and primary elements -->
+    <color name="primary_color">#0A1929</color>
+    
+    <!-- Accent: Electric Cyan - Interactive elements and highlights -->
+    <color name="accent_color">#00E5FF</color>
+    
+    <!-- Surface: Dark Charcoal - Cards and containers -->
+    <color name="card_background">#1C2833</color>
+    
+    <!-- Text/Icons: Pure White - Maximum contrast -->
+    <color name="text_primary">#FFFFFF</color>
+    
+    <!-- Subtle Gray: Secondary text and borders -->
+    <color name="text_secondary">#8B95A5</color>
+    
+    <!-- Backward compatibility -->
+    <color name="primary_light">#00E5FF</color>
+    <color name="button_primary">#00E5FF</color>
+    <color name="button_secondary">#1C2833</color>
     
     <!-- System Colors -->
     <color name="purple_200">#FFBB86FC</color>

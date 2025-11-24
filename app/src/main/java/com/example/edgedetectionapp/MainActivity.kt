@@ -39,10 +39,11 @@ class MainActivity : AppCompatActivity() {
     
     private lateinit var statusText: TextView
     private lateinit var startCameraButton: ImageButton
-    private lateinit var edgeDetectionSwitch: Switch
+    // Removed edgeDetectionSwitch
     private lateinit var shaderEffectSpinner: Spinner
     private lateinit var cameraPreview: PreviewView
     private lateinit var processedImageView: ImageView
+    private lateinit var frameNumberText: TextView
     private lateinit var cameraExecutor: ExecutorService
     
     private var isCameraStarted = false
@@ -58,10 +59,11 @@ class MainActivity : AppCompatActivity() {
         // Initialize UI components
         statusText = findViewById(R.id.statusText)
         startCameraButton = findViewById(R.id.startCameraButton)
-        edgeDetectionSwitch = findViewById(R.id.edgeDetectionSwitch)
+        // edgeDetectionSwitch removed
         shaderEffectSpinner = findViewById(R.id.shaderEffectSpinner)
         cameraPreview = findViewById(R.id.cameraPreview)
         processedImageView = findViewById(R.id.processedImageView)
+        frameNumberText = findViewById(R.id.frameNumberText)
         
         // Initialize camera executor
         cameraExecutor = Executors.newSingleThreadExecutor()
@@ -82,38 +84,27 @@ class MainActivity : AppCompatActivity() {
             }
         }
         
-        // Edge detection switch
-        edgeDetectionSwitch.setOnCheckedChangeListener { _, isChecked ->
-            isEdgeDetectionEnabled = isChecked
-            Log.d(TAG, "Edge detection ${if (isChecked) "enabled" else "disabled"}")
-            
-            // Show/hide processed view based on edge detection or shader effect
-            if (!isChecked && currentShaderEffect == 0) {
-                processedImageView.visibility = View.GONE
-            }
-        }
+
+        // Always show processed view
+        processedImageView.visibility = View.VISIBLE
+        isEdgeDetectionEnabled = true
 
         // Initial status
         updateStatus()
     }
     
     private fun setupShaderEffects() {
-        val effects = arrayOf("Normal", "Grayscale", "Invert", "Edge Enhance")
+        val effects = arrayOf("Normal", "Invert", "Edge Enhance")
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, effects)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         shaderEffectSpinner.adapter = adapter
         
         shaderEffectSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                currentShaderEffect = position
+                // Adjust index: 0=Normal, 2=Invert, 3=Edge Enhance
+                currentShaderEffect = if (position == 0) 0 else position + 1
                 Log.d(TAG, "Shader effect changed to: ${effects[position]}")
-                
-                // Show processed view if any effect is selected
-                if (position != 0 || isEdgeDetectionEnabled) {
-                    processedImageView.visibility = View.VISIBLE
-                } else {
-                    processedImageView.visibility = View.GONE
-                }
+                processedImageView.visibility = View.VISIBLE
             }
             
             override fun onNothingSelected(parent: AdapterView<*>?) {}
@@ -227,6 +218,9 @@ class MainActivity : AppCompatActivity() {
         
         override fun analyze(image: ImageProxy) {
             frameCount++
+            runOnUiThread {
+                frameNumberText.text = "Frame: $frameCount"
+            }
             val currentTime = System.currentTimeMillis()
             
             // Process every 5th frame for better performance (6fps on 30fps camera)
@@ -241,7 +235,6 @@ class MainActivity : AppCompatActivity() {
                             if (currentTime - lastProcessTime > 2000) {
                                 runOnUiThread {
                                     val effectName = when (currentShaderEffect) {
-                                        1 -> "Grayscale"
                                         2 -> "Invert"
                                         3 -> "Edge Enhance"
                                         else -> if (isEdgeDetectionEnabled) "Edge Detection" else "Normal"
@@ -306,24 +299,31 @@ class MainActivity : AppCompatActivity() {
                 // Apply shader effects
                 for (i in processedData.indices.take(width * height)) {
                     val gray = processedData[i].toInt() and 0xFF
-                    
                     val color = when (currentShaderEffect) {
-                        1 -> {
-                            // Grayscale (already grayscale, just apply)
-                            Color.argb(255, gray, gray, gray)
-                        }
-                        2 -> {
-                            // Invert
+                        2 -> { // Invert
                             val inverted = 255 - gray
                             Color.argb(255, inverted, inverted, inverted)
                         }
-                        3 -> {
-                            // Edge Enhance (boost contrast)
-                            val enhanced = ((gray - 128) * 1.8 + 128).toInt().coerceIn(0, 255)
-                            Color.argb(255, enhanced, enhanced, enhanced)
+                        3 -> { // Improved Edge Enhance (Laplacian)
+                            val x = i % width
+                            val y = i / width
+                            var sum = 0
+                            for (ky in -1..1) {
+                                for (kx in -1..1) {
+                                    val nx = x + kx
+                                    val ny = y + ky
+                                    if (nx in 0 until width && ny in 0 until height) {
+                                        val ni = ny * width + nx
+                                        val ngray = processedData[ni].toInt() and 0xFF
+                                        val kernel = if (kx == 0 && ky == 0) 8 else -1
+                                        sum += kernel * ngray
+                                    }
+                                }
+                            }
+                            val edge = sum.coerceIn(0, 255)
+                            Color.argb(255, edge, edge, edge)
                         }
-                        else -> {
-                            // Normal (no shader effect)
+                        else -> { // Normal
                             Color.argb(255, gray, gray, gray)
                         }
                     }

@@ -4,144 +4,146 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="?android:attr/colorBackground">
+    android:background="@color/primary_color">
 
-    <!-- Header Section -->
+    <!-- Minimal Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="@color/primary_color"
-        android:padding="16dp"
-        android:elevation="4dp">
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Edge Detector"
-            android:textColor="@android:color/white"
-            android:textSize="18sp"
+            android:text="EDGE VISION"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
+            android:letterSpacing="0.15"
             android:textStyle="bold"
-            android:layout_marginBottom="12dp" />
+            android:layout_marginBottom="8dp" />
 
         <TextView
             android:id="@+id/statusText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text=""
-            android:textColor="@android:color/white"
-            android:textSize="14sp"
-            android:gravity="center"
-            android:layout_marginBottom="12dp"
+            android:textColor="@color/accent_color"
+            android:textSize="12sp"
+            android:letterSpacing="0.05"
+            android:layout_marginBottom="16dp"
             android:visibility="gone" />
 
-        <!-- Edge Detection Toggle -->
-        <LinearLayout
-            android:layout_width="match_parent"
+
+
+        <!-- Frame Number Display -->
+        <TextView
+            android:id="@+id/frameNumberText"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:background="@drawable/toggle_background"
-            android:padding="12dp"
-            android:layout_marginBottom="8dp">
+            android:text="Frame: 0"
+            android:textColor="@color/text_primary"
+            android:textSize="13sp"
+            android:layout_marginBottom="8dp"
+            android:layout_gravity="start" />
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Edge Detection"
-                android:textColor="@android:color/white"
-                android:textSize="16sp" />
-
-            <Switch
-                android:id="@+id/edgeDetectionSwitch"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp" />
-        </LinearLayout>
-
-        <!-- Shader Effects Spinner -->
+        <!-- Minimal Shader Spinner -->
         <Spinner
             android:id="@+id/shaderEffectSpinner"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@android:color/white"
-            android:padding="12dp" />
+            android:layout_height="44dp"
+            android:background="@drawable/spinner_background"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp" />
 
     </LinearLayout>
 
-    <!-- Display Container -->
+    <!-- Display Area - Seamless Design -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:orientation="vertical"
-        android:padding="8dp">
+        android:background="@color/card_background"
+        android:padding="2dp">
 
         <!-- Camera Preview -->
-        <LinearLayout
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:orientation="vertical"
-            android:background="@color/card_background"
-            android:layout_marginBottom="4dp">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Camera Preview"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:padding="6dp"
-                android:background="@color/primary_color"
-                android:textColor="@android:color/white"
-                android:gravity="center" />
+            android:background="@color/primary_color"
+            android:layout_marginBottom="2dp">
 
             <androidx.camera.view.PreviewView
                 android:id="@+id/cameraPreview"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 app:scaleType="fillCenter" />
-        </LinearLayout>
 
-        <!-- Edge Detection / Shader Output -->
-        <LinearLayout
+            <!-- Floating Label -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="LIVE"
+                android:textSize="9sp"
+                android:textColor="@color/text_primary"
+                android:letterSpacing="0.2"
+                android:background="@color/accent_color"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:layout_gravity="top|start"
+                android:layout_margin="12dp"
+                android:alpha="0.9" />
+        </FrameLayout>
+
+        <!-- Processed Output -->
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:orientation="vertical"
-            android:background="@color/card_background"
-            android:layout_marginTop="4dp">
+            android:background="@color/primary_color">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Processed Output (Shaders)"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:padding="6dp"
-                android:background="@color/accent_color"
-                android:textColor="@android:color/white"
-                android:gravity="center" />
-
-            <!-- Use ImageView for now, GLSurfaceView for advanced -->
             <ImageView
                 android:id="@+id/processedImageView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@android:color/black"
+                android:background="@color/primary_color"
                 android:scaleType="centerCrop"
                 android:adjustViewBounds="false" />
-        </LinearLayout>
+
+            <!-- Floating Label -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PROCESSED"
+                android:textSize="9sp"
+                android:textColor="@color/primary_color"
+                android:letterSpacing="0.2"
+                android:background="@color/text_primary"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:layout_gravity="top|start"
+                android:layout_margin="12dp"
+                android:alpha="0.9" />
+        </FrameLayout>
     </LinearLayout>
 
-    <!-- Camera Control -->
+    <!-- Minimal Control Bar -->
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="80dp"
+        android:layout_height="72dp"
         android:background="@color/primary_color"
-        android:padding="16dp">
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
 
         <ImageButton
             android:id="@+id/startCameraButton"
@@ -151,7 +153,8 @@
             android:background="@drawable/camera_button_background"
             android:src="@drawable/ic_camera"
             android:contentDescription="Start Camera"
-            android:scaleType="centerInside" />
+            android:scaleType="centerInside"
+            android:tint="@color/accent_color" />
     </FrameLayout>
 
 </LinearLayout>

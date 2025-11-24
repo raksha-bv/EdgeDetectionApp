@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="oval">
-    <solid android:color="@android:color/white" />
-    <stroke 
-        android:width="3dp"
-        android:color="@color/accent_color" />
-</shape>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/accent_color">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@color/card_background" />
+            <stroke 
+                android:width="2dp" 
+                android:color="@color/accent_color" />
+        </shape>
+    </item>
+</ripple>
